@@ -1,3 +1,3 @@
-package auth
+package main
 
 func main() {}
