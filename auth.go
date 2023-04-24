@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 	"strings"
@@ -13,17 +12,11 @@ import (
 func CheckAuth(w http.ResponseWriter, r *http.Request, secretKey []byte) ([]byte, error) {
 
 	type UserData struct {
-		UserId   string `json:"userId"`
+		UserId   string
 		Username string
 	}
 	var u UserData
-	u.Username = u.UserId
 
-	err := json.NewDecoder(r.Body).Decode(&u)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return []byte(""), err
-	}
 	type JWTClaim struct {
 		Data UserData
 		jwt.StandardClaims
@@ -31,8 +24,11 @@ func CheckAuth(w http.ResponseWriter, r *http.Request, secretKey []byte) ([]byte
 	prefix := "Bearer "
 	authHeader := r.Header.Get("Authorization")
 	reqToken := strings.TrimPrefix(authHeader, prefix)
+	userIdHeader := r.Header.Get("Wawi-UserID")
+	u.UserId = userIdHeader
+	u.Username = u.UserId
 
-	_, err = jwt.ParseWithClaims(
+	_, err := jwt.ParseWithClaims(
 		reqToken,
 		&JWTClaim{},
 		func(token *jwt.Token) (interface{}, error) {
